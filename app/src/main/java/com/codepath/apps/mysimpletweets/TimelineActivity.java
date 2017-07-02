@@ -2,6 +2,7 @@ package com.codepath.apps.mysimpletweets;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -34,6 +35,7 @@ public class TimelineActivity extends AppCompatActivity {
     Button btnCompose;
     Button btnProfile;
     private final int REQUEST_CODE = 20;
+    private SwipeRefreshLayout swipeContainer;
 
 
     @Override
@@ -43,8 +45,21 @@ public class TimelineActivity extends AppCompatActivity {
         //toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+
         //setting up toolbar icon
         btnCompose = (Button) findViewById(R.id.miCompose);
+
+        //setting up the swipe rerefrsh
+        swipeContainer = (SwipeRefreshLayout) findViewById(R.id.swipeContainer);
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                fetchTimelineAsync(0);
+
+            }
+        }
+        );
 
 
         client = TwitterApp.getRestClient();
@@ -62,6 +77,9 @@ public class TimelineActivity extends AppCompatActivity {
         populateTimeline();
 
     }
+
+
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -72,7 +90,7 @@ public class TimelineActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        switch(item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.miCompose:
                 composeMessage();
                 return true;
@@ -85,10 +103,10 @@ public class TimelineActivity extends AppCompatActivity {
     }
 
 
-    public void composeMessage(){
+    public void composeMessage() {
 
-        Intent i = new Intent(this,ComposeActivity.class);
-        startActivityForResult(i,REQUEST_CODE);
+        Intent i = new Intent(this, ComposeActivity.class);
+        startActivityForResult(i, REQUEST_CODE);
 
 
         //Toast.makeText(TimelineActivity.this,"compose",Toast.LENGTH_SHORT).show();
@@ -102,25 +120,24 @@ public class TimelineActivity extends AppCompatActivity {
 
             // Extract name value from result extras
             Tweet newtweet = data.getParcelableExtra("TWEET_KEY");
-            tweets.add(0,newtweet);
+            tweets.add(0, newtweet);
             tweetAdapter.notifyDataSetChanged();
             rvTweets.scrollToPosition(0);
         }
     }
 
 
-    public void showProfileView(){
-        Toast.makeText(TimelineActivity.this,"profile",Toast.LENGTH_SHORT).show();
+    public void showProfileView() {
+        Toast.makeText(TimelineActivity.this, "profile", Toast.LENGTH_SHORT).show();
     }
 
 
-
-    private void populateTimeline(){
+    private void populateTimeline() {
         client.getHomeTimeline(new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-              // new Tweet(jsonObject)
-      //          Log.d("TwitterClient", response.toString());
+                // new Tweet(jsonObject)
+                //          Log.d("TwitterClient", response.toString());
                 //iterate through the JSON array
                 // for each entry, deserialize the JSON object
 
@@ -128,7 +145,7 @@ public class TimelineActivity extends AppCompatActivity {
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
-                for (int i=0; i< response.length(); i++) {
+                for (int i = 0; i < response.length(); i++) {
                     // convert each object to a Tweet model
                     // add that Tweet model to our data source
                     // notify the adapter that we're added an item
@@ -136,7 +153,7 @@ public class TimelineActivity extends AppCompatActivity {
 
                         Tweet tweet = Tweet.fromJSON(response.getJSONObject(i));
                         tweets.add(tweet);
-                        tweetAdapter.notifyItemInserted(tweets.size() -1);
+                        tweetAdapter.notifyItemInserted(tweets.size() - 1);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -162,4 +179,31 @@ public class TimelineActivity extends AppCompatActivity {
             }
         });
     }
+    public void fetchTimelineAsync(int page) {
+
+        Log.d("DEBUG", "called fetchtimeline");
+        // Send the network request to fetch the updated data
+        // `client` here is an instance of Android Async HTTP
+        // getHomeTimeline is an example endpoint.
+        client.getHomeTimeline(new JsonHttpResponseHandler() {
+
+
+
+
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
+                super.onSuccess(statusCode, headers, response);
+                Log.d("DEBUG", "Fetched timeline");
+                tweetAdapter.clear();
+                tweetAdapter.addAll(Tweet.fromJSONArray(response));
+                swipeContainer.setRefreshing(false);
+
+            }
+
+            public void onFailure(Throwable e) {
+                Log.d("DEBUG", "Fetch timeline error: " + e.toString());
+            }
+        });
+    }
+
 }

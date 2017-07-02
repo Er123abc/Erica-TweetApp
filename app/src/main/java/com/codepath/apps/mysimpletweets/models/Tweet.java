@@ -3,8 +3,11 @@ package com.codepath.apps.mysimpletweets.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 /**
  * Created by ericar on 6/28/17.
@@ -28,6 +31,21 @@ public class Tweet implements Parcelable {
         tweet.user = User.fromJSON(jsonObject.getJSONObject("user"));
         return tweet;
     }
+     public static ArrayList<Tweet> fromJSONArray(JSONArray jsonArray){
+         ArrayList<Tweet> tweets = new ArrayList<>();
+         for (int i = 0; i < jsonArray.length(); i++) {
+             // convert each object to a Tweet model
+             // add that Tweet model to our data source
+             // notify the adapter that we're added an item
+             try {
+                 Tweet tweet = Tweet.fromJSON(jsonArray.getJSONObject(i));
+                 tweets.add(tweet);
+             } catch (JSONException e) {
+                 e.printStackTrace();
+             }
+         }
+         return tweets;
+     }
 
     @Override
     public int describeContents() {
