@@ -41,29 +41,21 @@ public class ComposeActivity extends AppCompatActivity {
 
     public void onSubmit(View v) {
 
-
-        String tweetText;
-
-        tweetText = etMessage.getText().toString();
+        String tweetText = etMessage.getText().toString();
         client.sendTweet(tweetText, new JsonHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                super.onSuccess(statusCode, headers, response);
-                Tweet newTweet = null;
                 try {
-                    newTweet = Tweet.fromJSON(response);
+                    Tweet newTweet = Tweet.fromJSON(response);
+                    Intent data = new Intent();
+                    data.putExtra("TWEET_KEY", newTweet);
+                    setResult(RESULT_OK, data);
+                    // closes the activity and returns to first screen
+                    finish();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-
-                Intent data = new Intent();
-                data.putExtra("TWEET_KEY", newTweet);
-                setResult(RESULT_OK, data);
-                // closes the activity and returns to first screen
-                finish();
-
-
             }
 
             @Override

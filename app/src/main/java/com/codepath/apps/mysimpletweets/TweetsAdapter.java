@@ -17,17 +17,23 @@ import java.util.List;
  * Created by ericar on 6/28/17.
  */
 
-public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder>{
+public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder> {
     private List<Tweet> mTweets;
     Context context;
+    private TweetAdapterListener mListener;
+
+    //define an interface required by the ViewHolder
+    public interface TweetAdapterListener {
+        public void onItemSelected(View view, int position);
+    }
 
     // pass in the Tweets array in the constructor
-    public TweetsAdapter(List<Tweet> tweets) {
+    public TweetsAdapter(List<Tweet> tweets, TweetAdapterListener listener) {
         mTweets = tweets;
+        mListener = listener;
     }
 
     // inflate the Layout and cache references into ViewHolder
-
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         context = parent.getContext();
@@ -50,6 +56,8 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
         holder.tvBody.setText(tweet.body);
 
         Glide.with(context).load(tweet.user.profileImageUrl).into(holder.ivProfileImage);
+
+        holder.makeListenerProfileClick(tweet, holder.ivProfileImage);
     }
 
     @Override
@@ -57,37 +65,62 @@ public class TweetsAdapter extends RecyclerView.Adapter<TweetsAdapter.ViewHolder
         return mTweets.size();
     }
 
-// create Viewholder calss
+    // create Viewholder class
 
-public static class ViewHolder extends RecyclerView.ViewHolder {
-    public ImageView ivProfileImage;
-    public TextView tvUsername;
-    public TextView tvBody;
+    public class ViewHolder extends RecyclerView.ViewHolder {
+        public ImageView ivProfileImage;
+        public TextView tvUsername;
+        public TextView tvBody;
 
-    public ViewHolder (View itemView) {
-        super(itemView);
+        public ViewHolder(View itemView) {
+            super(itemView);
 
-        // perform findViewById lookups
+            // perform findViewById lookups
 
-        ivProfileImage = (ImageView) itemView.findViewById(R.id.ivProfileImage);
-        tvUsername = (TextView) itemView.findViewById(R.id.tvUserName);
-        tvBody = (TextView) itemView.findViewById(R.id.tvBody);
+            ivProfileImage = (ImageView) itemView.findViewById(R.id.ivProfileImage);
+            tvUsername = (TextView) itemView.findViewById(R.id.tvUserName);
+            tvBody = (TextView) itemView.findViewById(R.id.tvBody);
 
-    }
 
-}
-//implementingswiperefresh
-    /* Within the RecyclerView.Adapter class */
+            //handle row click event
+//            itemView.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View view) {
+//                    if (mListener != null) {
+//                        //get the position of row element
+//                        int position = getAdapterPosition();
+//                        //fire the listener callback
+//                        mListener.onItemSelected(view, position);
+//
+//                    }
+//                }
+//            });
+        }
 
-    // Clean all elements of the recycler
-    public void clear() {
-        mTweets.clear();
-        notifyDataSetChanged();
-    }
+        public void makeListenerProfileClick(final Tweet tweet, ImageView ivProfileImage) {
+            ivProfileImage.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ((TimelineActivity)context).showProfileView(tweet.user.screenName);
+                }
+            });
+        }
 
-    // Add a list of items -- change to type used
-    public void addAll(List<Tweet> list) {
-        mTweets.addAll(list);
-        notifyDataSetChanged();
+
+
+        //implementingswiperefresh
+        /* Within the RecyclerView.Adapter class */
+
+        // Clean all elements of the recycler
+//        public void clear() {
+//            mTweets.clear();
+//            notifyDataSetChanged();
+//        }
+
+        // Add a list of items -- change to type used
+//        public void addAll(List<Tweet> list) {
+//            mTweets.addAll(list);
+//            notifyDataSetChanged();
+//        }
     }
 }
